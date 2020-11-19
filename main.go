@@ -17,11 +17,6 @@ func main() {
 			log.Fatalln(err)
 		}
 
-		data, err := Asset(game)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
 		chip8 := new(vm.Chip8)
 
 		chip8.Init(
@@ -30,6 +25,11 @@ func main() {
 			term,
 			quit,
 		)
+
+		data, err := Asset(game)
+		if err != nil {
+			log.Fatalln(err)
+		}
 
 		if err := chip8.Load(bytes.NewBuffer(data)); err != nil {
 			log.Fatalln(err)

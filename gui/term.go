@@ -144,6 +144,16 @@ outer:
 					tcell.StyleDefault.Reverse(i == selected),
 				)
 			}
+
+			t.s.SetContent(0, len(gameList)+1, 0,
+				[]rune("Keys for Menu: ↑，↓，ESC, ENTER"),
+				tcell.StyleDefault.Foreground(tcell.ColorGreen),
+			)
+			t.s.SetContent(0, len(gameList)+2, 0,
+				[]rune("Keys for Game: 1，2，3, 4, q, w, e, r, a, s, d, f, z, x, c, v"),
+				tcell.StyleDefault.Foreground(tcell.ColorGreen),
+			)
+
 			t.s.Show()
 		}
 	}
@@ -153,11 +163,6 @@ outer:
 	}
 
 	return gameList[selected], nil
-}
-
-//Quit return the quit channel
-func (t *Term) Quit() <-chan struct{} {
-	return t.quit
 }
 
 //IsPressed Impl
