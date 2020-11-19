@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"log"
-	"os"
 
 	"github.com/makoto126/term-atari/gui"
 	"github.com/makoto126/term-atari/vm"
@@ -11,16 +10,11 @@ import (
 
 func main() {
 
-	term := new(gui.Term)
-	if err := term.Init(); err != nil {
-		log.Fatalln(err)
-	}
-
 	for {
-		game := term.GameSelect(AssetNames())
-		if game == "" {
-			log.Println("no game selected")
-			os.Exit(0)
+		term := new(gui.Term)
+		game, quit, err := term.Init(AssetNames())
+		if err != nil {
+			log.Fatalln(err)
 		}
 
 		data, err := Asset(game)
@@ -34,7 +28,7 @@ func main() {
 			term,
 			term,
 			term,
-			term.Quit(),
+			quit,
 		)
 
 		if err := chip8.Load(bytes.NewBuffer(data)); err != nil {
