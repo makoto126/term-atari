@@ -11,8 +11,14 @@ import (
 func main() {
 
 	for {
+		rom := gui.SelectRom(AssetNames())
+		if rom == "" {
+			break
+		}
+
 		term := new(gui.Term)
-		game, quit, err := term.Init(AssetNames())
+
+		quit, err := term.Init()
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -26,7 +32,7 @@ func main() {
 			quit,
 		)
 
-		data, err := Asset(game)
+		data, err := Asset(rom)
 		if err != nil {
 			log.Fatalln(err)
 		}

@@ -1,8 +1,6 @@
 package gui
 
 import (
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -43,15 +41,15 @@ type Term struct {
 }
 
 //Init the Term
-func (t *Term) Init(gameList []string) (string, <-chan struct{}, error) {
+func (t *Term) Init() (<-chan struct{}, error) {
 
 	s, err := tcell.NewScreen()
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 
 	if err := s.Init(); err != nil {
-		return "", nil, err
+		return nil, err
 	}
 
 	s.SetStyle(
@@ -61,13 +59,6 @@ func (t *Term) Init(gameList []string) (string, <-chan struct{}, error) {
 	)
 
 	t.s = s
-
-	game, err := t.gameSelect(gameList)
-	if err != nil {
-		t.s.Fini()
-		return "", nil, err
-	}
-
 	t.quit = make(chan struct{})
 
 	go func() {
@@ -77,8 +68,8 @@ func (t *Term) Init(gameList []string) (string, <-chan struct{}, error) {
 			case *tcell.EventKey:
 				switch ev.Key() {
 				case tcell.KeyEscape:
-					close(t.quit)
 					t.s.Fini()
+					close(t.quit)
 					return
 				case tcell.KeyRune:
 					if _, ok := keymap[ev.Rune()]; ok {
@@ -91,78 +82,7 @@ func (t *Term) Init(gameList []string) (string, <-chan struct{}, error) {
 		}
 	}()
 
-	return game, t.quit, nil
-}
-
-func (t *Term) gameSelect(gameList []string) (string, error) {
-
-	selected := 0
-	move := make(chan struct{})
-	done := make(chan struct{})
-	go func() {
-		move <- struct{}{}
-
-		for {
-			ev := t.s.PollEvent()
-			switch ev := ev.(type) {
-			case *tcell.EventKey:
-				switch ev.Key() {
-				case tcell.KeyEscape:
-					selected = -1
-					close(done)
-					return
-				case tcell.KeyEnter:
-					close(done)
-					return
-				case tcell.KeyUp, tcell.KeyRight:
-					if selected > 0 {
-						selected--
-						move <- struct{}{}
-					}
-				case tcell.KeyDown, tcell.KeyLeft:
-					if selected < len(gameList)-1 {
-						selected++
-						move <- struct{}{}
-					}
-				}
-			case *tcell.EventResize:
-				t.s.Sync()
-			}
-		}
-	}()
-
-outer:
-	for {
-		select {
-		case <-done:
-			close(move)
-			break outer
-		case <-move:
-			for i, name := range gameList {
-				t.s.SetContent(0, i, 0,
-					[]rune(strings.Split(name, "/")[1]),
-					tcell.StyleDefault.Reverse(i == selected),
-				)
-			}
-
-			t.s.SetContent(0, len(gameList)+1, 0,
-				[]rune("Keys for Menu: ↑，↓，ESC, ENTER"),
-				tcell.StyleDefault.Foreground(tcell.ColorGreen),
-			)
-			t.s.SetContent(0, len(gameList)+2, 0,
-				[]rune("Keys for Game: 1，2，3, 4, q, w, e, r, a, s, d, f, z, x, c, v"),
-				tcell.StyleDefault.Foreground(tcell.ColorGreen),
-			)
-
-			t.s.Show()
-		}
-	}
-
-	if selected == -1 {
-		return "", fmt.Errorf("no game selected")
-	}
-
-	return gameList[selected], nil
+	return t.quit, nil
 }
 
 //IsPressed Impl
